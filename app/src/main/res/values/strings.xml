@@ -337,7 +337,7 @@
     <string name="help_bluetooth">Toggle Bluetooth on older Android versions, or open Bluetooth settings on modern Android versions where direct toggles are restricted.</string>
     <string name="help_brightness">Set the brightness of your device
         \n$ brightness [0-100]</string>
-    <string name="help_clear">Clear the screen</string>
+    <string name="help_clear">Clear the screen and dismiss all clearable Android notifications</string>
     <string name="help_calc" formatted="false">Perform basic operations (+ - * / % ^ sqrt)
         \nExample:
         \n\n$ calc 4+2-5

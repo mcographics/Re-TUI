@@ -134,6 +134,7 @@ import ohi.andre.consolelauncher.managers.settings.AppearanceSettings.musicWidge
 import ohi.andre.consolelauncher.managers.settings.AppearanceSettings.notificationWidgetBorderColor
 import ohi.andre.consolelauncher.managers.settings.AppearanceSettings.notificationWidgetTextColor
 import ohi.andre.consolelauncher.managers.settings.AppearanceSettings.outputCornerRadius
+import ohi.andre.consolelauncher.managers.settings.AppearanceSettings.outputContentAlignment
 import ohi.andre.consolelauncher.managers.settings.AppearanceSettings.outputHeaderTextSize
 import ohi.andre.consolelauncher.managers.settings.AppearanceSettings.outputTrayMaxHeightDp
 import ohi.andre.consolelauncher.managers.settings.AppearanceSettings.terminalBorderColor
@@ -1172,6 +1173,11 @@ class UIManager(
         terminalTrayToggle = terminalPage.findViewById<TextView?>(R.id.terminal_tray_toggle)
 
         terminalView = terminalPage.findViewById<View?>(R.id.terminal_view) as TextView?
+        val outputTopAligned = "top" == outputContentAlignment()
+        terminalPage.findViewById<View?>(R.id.terminal_output_spacer)?.visibility =
+            if (outputTopAligned) View.GONE else View.VISIBLE
+        terminalView!!.gravity =
+            (if (outputTopAligned) Gravity.TOP else Gravity.BOTTOM) or Gravity.START
         terminalView!!.setOnTouchListener(this)
         (terminalView!!.getParent().getParent() as View).setOnTouchListener(this)
 
@@ -2449,7 +2455,13 @@ class UIManager(
             expandedHeight =
                 max(collapsedHeight, UIUtils.dpToPx(mContext!!, if (keyboardVisible) 220 else 320))
         } else {
-            val trayPercent = if (keyboardVisible) 0.34f else 0.48f
+            val trayPercent = if (keyboardVisible) {
+                0.34f
+            } else if ("top" == outputContentAlignment()) {
+                0.52f
+            } else {
+                0.48f
+            }
             expandedHeight = max(collapsedHeight, Math.round(rootHeight * trayPercent))
         }
         return applyTerminalTrayMaxHeight(expandedHeight, collapsedHeight)

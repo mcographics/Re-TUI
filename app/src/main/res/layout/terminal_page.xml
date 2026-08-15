@@ -25,6 +25,7 @@
             android:orientation="vertical">
 
             <View
+                android:id="@+id/terminal_output_spacer"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:layout_weight="1" />

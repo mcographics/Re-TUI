@@ -136,6 +136,14 @@ object AppearanceSettings {
     }
 
     @JvmStatic
+    fun outputContentAlignment(): String {
+        val alignment = LauncherSettings.get(Ui.output_content_alignment)
+            ?.trim()
+            ?.lowercase(Locale.US)
+        return if (alignment == "top") "top" else "bottom"
+    }
+
+    @JvmStatic
     fun headerCornerRadius(): Int = cornerRadiusWithFallback(Ui.header_corner_radius)
 
     @JvmStatic

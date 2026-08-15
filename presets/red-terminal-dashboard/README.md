@@ -1,10 +1,10 @@
 # Red Terminal Dashboard preset
 
 `retui-red-terminal-dashboard-preset.zip` is the restore-ready appearance
-package for the Build 406 dashboard.
+package for the Build 408 dashboard.
 
 SHA-256:
-`75C462E874A092FC65CD1DD352ED07217B9812C43313C251A1CCEC4F0FF12FCB`
+`E5ADACCB40A8D6B156CE56CAE438D5A99AC55C2B6F8031D15ED978F924E45314`
 
 The public package is sanitized:
 
@@ -20,12 +20,13 @@ formatting rules.
 
 ## Requirements
 
-- Re:TUI Build 406 from the `feature/red-terminal-dashboard-build406` branch
+- Re:TUI Build 408 from the `feature/red-terminal-dashboard-build406` branch
 - Android 6.0 or newer
 
 The preset supplies the appearance and dashboard configuration. Live system
 monitoring, compact weather formatting, two-page Home behavior, and persistent
-launcher fullscreen are implemented by the Build 406 application code.
+launcher fullscreen are implemented by the Build 408 application code. The
+preset also enables the full-height, top-aligned notification/output tray.
 
 ## Apply
 

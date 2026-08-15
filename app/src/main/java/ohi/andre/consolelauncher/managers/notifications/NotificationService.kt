@@ -116,8 +116,11 @@ class NotificationService : NotificationListenerService() {
     }
     private val dismissReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent != null && ACTION_DISMISS_NOTIFICATION == intent.getAction()) {
-                dismissNotification(intent.getStringExtra(EXTRA_NOTIFICATION_KEY))
+            when (intent?.action) {
+                ACTION_DISMISS_NOTIFICATION ->
+                    dismissNotification(intent.getStringExtra(EXTRA_NOTIFICATION_KEY))
+
+                ACTION_DISMISS_ALL_NOTIFICATIONS -> dismissAllNotifications()
             }
         }
     }
@@ -771,10 +774,11 @@ class NotificationService : NotificationListenerService() {
             reloadReceiverRegistered = true
         }
         if (!dismissReceiverRegistered) {
+            val dismissFilter = IntentFilter(ACTION_DISMISS_NOTIFICATION)
+            dismissFilter.addAction(ACTION_DISMISS_ALL_NOTIFICATIONS)
             LocalBroadcastManager.getInstance(this).registerReceiver(
-                dismissReceiver, IntentFilter(
-                    ACTION_DISMISS_NOTIFICATION
-                )
+                dismissReceiver,
+                dismissFilter
             )
             dismissReceiverRegistered = true
         }
@@ -1152,6 +1156,25 @@ class NotificationService : NotificationListenerService() {
         }
     }
 
+    private fun dismissAllNotifications() {
+        try {
+            cancelAllNotifications()
+        } catch (e: SecurityException) {
+            Tuils.log("Unable to clear Android notifications: " + e.message)
+        } catch (e: Exception) {
+            Tuils.log(e)
+        } finally {
+            synchronized(queueLock) {
+                queue?.clear()
+            }
+            synchronized(pastNotificationsLock) {
+                pastNotifications?.clear()
+            }
+            overlayNotifications.clear()
+            broadcastOverlayNotifications()
+        }
+    }
+
     private fun removeOverlayNotificationByKey(key: String?) {
         if (TextUtils.isEmpty(key)) {
             return
@@ -1274,6 +1297,8 @@ class NotificationService : NotificationListenerService() {
             BuildConfig.APPLICATION_ID + ".notification_reload"
         val ACTION_DISMISS_NOTIFICATION: String =
             BuildConfig.APPLICATION_ID + ".notification_dismiss"
+        val ACTION_DISMISS_ALL_NOTIFICATIONS: String =
+            BuildConfig.APPLICATION_ID + ".notification_dismiss_all"
         const val EXTRA_NOTIFICATION_KEY: String = "notification_key"
         private const val MEDIA_SESSION_EMPTY_GRACE_MS = 3000L
         private const val MAX_OVERLAY_NOTIFICATIONS = 12
@@ -1295,6 +1320,15 @@ class NotificationService : NotificationListenerService() {
             val intent = Intent(ACTION_DISMISS_NOTIFICATION)
             intent.putExtra(EXTRA_NOTIFICATION_KEY, key)
             LocalBroadcastManager.getInstance(context.getApplicationContext()).sendBroadcast(intent)
+        }
+
+        fun requestDismissAll(context: Context?) {
+            if (context == null) {
+                return
+            }
+
+            LocalBroadcastManager.getInstance(context.getApplicationContext())
+                .sendBroadcast(Intent(ACTION_DISMISS_ALL_NOTIFICATIONS))
         }
 
         fun requestListenerRebind(context: Context?) {

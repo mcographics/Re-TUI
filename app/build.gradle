@@ -40,8 +40,8 @@ android {
         applicationId = "com.dvil.tui_renewed"
         minSdk = 23
         targetSdk = 36
-        versionCode = 406
-        versionName = "2-12h-statusbar"
+        versionCode = 408
+        versionName = "2-expanded-notification-area"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

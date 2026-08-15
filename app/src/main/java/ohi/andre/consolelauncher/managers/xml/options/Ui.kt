@@ -1011,6 +1011,19 @@ enum class Ui : XMLPrefsSave {
             return "Maximum height for the expanded output tray in dp. 0 keeps the default adaptive height"
         }
     },
+    output_content_alignment {
+        override fun defaultValue(): String? {
+            return "bottom"
+        }
+
+        override fun type(): String? {
+            return XMLPrefsSave.TEXT
+        }
+
+        override fun info(): String? {
+            return "Vertical alignment for terminal output: top or bottom"
+        }
+    },
     input_field_margins {
         override fun defaultValue(): String? {
             return "3,3,0,0"

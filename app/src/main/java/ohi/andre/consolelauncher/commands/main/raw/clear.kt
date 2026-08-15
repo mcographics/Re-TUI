@@ -8,9 +8,11 @@ import ohi.andre.consolelauncher.R
 import ohi.andre.consolelauncher.UIManager
 import ohi.andre.consolelauncher.commands.CommandAbstraction
 import ohi.andre.consolelauncher.commands.ExecutePack
+import ohi.andre.consolelauncher.managers.notifications.NotificationService
 
 class clear : CommandAbstraction {
     override fun exec(pack: ExecutePack): String? {
+        NotificationService.requestDismissAll(pack.context)
         LocalBroadcastManager.getInstance(pack.context.applicationContext)
             .sendBroadcast(Intent(UIManager.ACTION_CLEAR))
         return null
