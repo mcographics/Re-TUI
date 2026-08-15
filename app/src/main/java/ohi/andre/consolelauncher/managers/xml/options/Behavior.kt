@@ -265,6 +265,32 @@ enum class Behavior : XMLPrefsSave {
             return XMLPrefsSave.BOOLEAN
         }
     },
+    ascii_system_monitor {
+        override fun defaultValue(): String? {
+            return "false"
+        }
+
+        override fun info(): String? {
+            return "If true, the ASCII panel becomes a live CPU, GPU, RAM, storage, and network monitor"
+        }
+
+        override fun type(): String? {
+            return XMLPrefsSave.BOOLEAN
+        }
+    },
+    ascii_system_monitor_interval_ms {
+        override fun defaultValue(): String? {
+            return "1000"
+        }
+
+        override fun info(): String? {
+            return "Live ASCII system monitor refresh interval in milliseconds (500-5000)"
+        }
+
+        override fun type(): String? {
+            return XMLPrefsSave.INTEGER
+        }
+    },
     ascii_animation_frame_delay_ms {
         override fun defaultValue(): String? {
             return "750"
@@ -1030,6 +1056,32 @@ enum class Behavior : XMLPrefsSave {
 
         override fun type(): String? {
             return XMLPrefsSave.TEXT
+        }
+    },
+    weather_location_label {
+        override fun defaultValue(): String? {
+            return ""
+        }
+
+        override fun info(): String? {
+            return "Short location label shown by the terminal weather line. Empty uses weather_location."
+        }
+
+        override fun type(): String? {
+            return XMLPrefsSave.TEXT
+        }
+    },
+    weather_terminal_line {
+        override fun defaultValue(): String? {
+            return "false"
+        }
+
+        override fun info(): String? {
+            return "Render weather as a responsive one-line terminal status with an inline SVG icon."
+        }
+
+        override fun type(): String? {
+            return XMLPrefsSave.BOOLEAN
         }
     },
     weather_format {

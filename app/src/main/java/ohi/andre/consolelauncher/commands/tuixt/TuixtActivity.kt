@@ -358,6 +358,10 @@ class TuixtActivity : Activity() {
         rows.add(TuixtAdapter.SettingsRow.setting(Ui.ascii_max_lines, "ASCII TXT"))
         rows.add(TuixtAdapter.SettingsRow.setting(Ui.ascii_pane_height_rows, "ASCII TXT"))
 
+        addSection(rows, "System Monitor")
+        rows.add(TuixtAdapter.SettingsRow.setting(Behavior.ascii_system_monitor, "System Monitor"))
+        rows.add(TuixtAdapter.SettingsRow.setting(Behavior.ascii_system_monitor_interval_ms, "System Monitor"))
+
         addSection(rows, "Animation")
         rows.add(TuixtAdapter.SettingsRow.setting(Behavior.ascii_animation, "Animation"))
         rows.add(TuixtAdapter.SettingsRow.setting(Behavior.ascii_animation_frame_delay_ms, "Animation"))

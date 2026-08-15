@@ -345,6 +345,8 @@ class TuixtAdapter(
             "show_ascii_landscape" -> "Show ASCII In Landscape"
             "ascii_max_lines" -> "ASCII Viewport Rows"
             "ascii_pane_height_rows" -> "ASCII Pane Height"
+            "ascii_system_monitor" -> "Enable Live System Monitor"
+            "ascii_system_monitor_interval_ms" -> "Monitor Refresh Interval"
             "ascii_animation" -> "Enable Animated ASCII"
             "ascii_animation_frame_delay_ms" -> "Animation Frame Delay"
             "ascii_animation_max_file_kb" -> "Max ASCII Import File Size"

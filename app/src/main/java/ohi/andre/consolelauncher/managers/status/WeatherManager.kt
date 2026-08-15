@@ -5,6 +5,9 @@ package ohi.andre.consolelauncher.managers.status
 import android.content.Context
 import android.content.Intent
 import android.location.Geocoder
+import android.net.ConnectivityManager
+import android.net.Network
+import android.os.Build
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import java.util.Locale
 import ohi.andre.consolelauncher.R
@@ -23,6 +26,7 @@ class WeatherManager(
     private var configurationError: String? = null
     private var locationQuery: String? = null
     private var resolvingLocation = false
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     init {
         val where = XMLPrefsManager.get(Behavior.weather_location)?.trim()
@@ -40,11 +44,22 @@ class WeatherManager(
         updateWeather()
     }
 
+    override fun start() {
+        if (!running) {
+            publishCachedOrLoading()
+            registerReconnectRefresh()
+        }
+        super.start()
+    }
+
+    override fun stop() {
+        super.stop()
+        unregisterReconnectRefresh()
+    }
+
     fun updateWeather() {
         configurationError?.let {
-            val intent = Intent(UIManager.ACTION_WEATHER)
-            intent.putExtra(XMLPrefsManager.VALUE_ATTRIBUTE, it)
-            LocalBroadcastManager.getInstance(context.applicationContext).sendBroadcast(intent)
+            sendOutput(it)
             return
         }
         if (url == null && !resolvingLocation) {
@@ -110,7 +125,68 @@ class WeatherManager(
     private fun sendOutput(message: String) {
         val intent = Intent(UIManager.ACTION_WEATHER)
         intent.putExtra(XMLPrefsManager.VALUE_ATTRIBUTE, message)
+        val cached = WeatherSnapshotStore.load(context)
+        if (cached != null) {
+            WeatherIntentContract.putSnapshot(
+                intent,
+                cached.data,
+                cached = true,
+                savedAtMillis = cached.savedAtMillis
+            )
+            intent.putExtra(UIManager.WEATHER_SYMBOL, cached.data.symbolCode)
+        } else {
+            WeatherIntentContract.putState(intent, WeatherLineState.UNAVAILABLE)
+        }
         LocalBroadcastManager.getInstance(context.applicationContext).sendBroadcast(intent)
+    }
+
+    private fun publishCachedOrLoading() {
+        val intent = Intent(UIManager.ACTION_WEATHER)
+        val cached = WeatherSnapshotStore.load(context)
+        if (cached != null) {
+            WeatherIntentContract.putSnapshot(
+                intent,
+                cached.data,
+                cached = true,
+                savedAtMillis = cached.savedAtMillis
+            )
+            intent.putExtra(
+                XMLPrefsManager.VALUE_ATTRIBUTE,
+                cached.data.conditionLabel + ", " + cached.data.temperature + "°" + cached.data.temperatureUnit
+            )
+            intent.putExtra(UIManager.WEATHER_SYMBOL, cached.data.symbolCode)
+        } else {
+            WeatherIntentContract.putState(intent, WeatherLineState.LOADING)
+            intent.putExtra(XMLPrefsManager.VALUE_ATTRIBUTE, "WX // SYNC_")
+        }
+        LocalBroadcastManager.getInstance(context.applicationContext).sendBroadcast(intent)
+    }
+
+    private fun registerReconnectRefresh() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N || networkCallback != null) return
+        val connectivity = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            ?: return
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                if (running) handler.post { updateWeather() }
+            }
+        }
+        try {
+            connectivity.registerDefaultNetworkCallback(callback)
+            networkCallback = callback
+        } catch (_: Exception) {
+            networkCallback = null
+        }
+    }
+
+    private fun unregisterReconnectRefresh() {
+        val callback = networkCallback ?: return
+        val connectivity = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+        try {
+            connectivity?.unregisterNetworkCallback(callback)
+        } catch (_: Exception) {
+        }
+        networkCallback = null
     }
 
     private fun setUrl(latitude: Double, longitude: Double) {

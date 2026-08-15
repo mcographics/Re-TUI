@@ -42,6 +42,9 @@ import okhttp3.OkHttpClient
 import okhttp3.Response
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.resetFile
 import ohi.andre.consolelauncher.managers.status.WeatherResponseParser
+import ohi.andre.consolelauncher.managers.status.WeatherIntentContract
+import ohi.andre.consolelauncher.managers.status.WeatherLineState
+import ohi.andre.consolelauncher.managers.status.WeatherSnapshotStore
 
 /**
  * Created by francescoandreuzzi on 29/03/2018.
@@ -115,14 +118,7 @@ class HTMLExtractManager(context: Context, client: OkHttpClient) {
                             val message =
                                 context.getString(R.string.internet_error) + Tuils.SPACE + response.code
 
-                            if (weatherArea) {
-                                val i: Intent = Intent(UIManager.ACTION_WEATHER)
-                                i.putExtra(XMLPrefsManager.VALUE_ATTRIBUTE, message)
-                                LocalBroadcastManager.getInstance(context.getApplicationContext())
-                                    .sendBroadcast(i)
-                            } else {
-                                output(message, context, false)
-                            }
+                            output(message, context, weatherArea)
 
                             return
                         }
@@ -141,6 +137,8 @@ class HTMLExtractManager(context: Context, client: OkHttpClient) {
                                 json,
                                 XMLPrefsManager.get(Behavior.weather_temperature_measure) ?: "metric"
                             ) ?: throw IllegalArgumentException(context.getString(R.string.weather_response_invalid))
+                            val displayData = snapshot.displayData()
+                            WeatherSnapshotStore.save(context, displayData)
 
                             var o: CharSequence = Tuils.span(weatherFormat, weatherColor) ?: SpannableString(weatherFormat)
 
@@ -180,6 +178,7 @@ class HTMLExtractManager(context: Context, client: OkHttpClient) {
                             val i: Intent = Intent(UIManager.ACTION_WEATHER)
                             i.putExtra(XMLPrefsManager.VALUE_ATTRIBUTE, o)
                             i.putExtra(UIManager.WEATHER_SYMBOL, snapshot.symbolCode)
+                            WeatherIntentContract.putSnapshot(i, displayData, cached = false)
                             LocalBroadcastManager.getInstance(context.getApplicationContext())
                                 .sendBroadcast(i)
                         } else if (pathType == StoreableValue.Type.xpath) {
@@ -733,7 +732,23 @@ class HTMLExtractManager(context: Context, client: OkHttpClient) {
         ) {
             if (weatherArea) {
                 val i: Intent = Intent(UIManager.ACTION_WEATHER)
-                i.putExtra(XMLPrefsManager.VALUE_ATTRIBUTE, s)
+                val cached = WeatherSnapshotStore.load(context)
+                if (cached != null) {
+                    WeatherIntentContract.putSnapshot(
+                        i,
+                        cached.data,
+                        cached = true,
+                        savedAtMillis = cached.savedAtMillis
+                    )
+                    i.putExtra(
+                        XMLPrefsManager.VALUE_ATTRIBUTE,
+                        cached.data.conditionLabel + ", " + cached.data.temperature + "°" + cached.data.temperatureUnit
+                    )
+                    i.putExtra(UIManager.WEATHER_SYMBOL, cached.data.symbolCode)
+                } else {
+                    WeatherIntentContract.putState(i, WeatherLineState.UNAVAILABLE)
+                    i.putExtra(XMLPrefsManager.VALUE_ATTRIBUTE, "WEATHER // DATA UNAVAILABLE")
+                }
                 LocalBroadcastManager.getInstance(context.getApplicationContext()).sendBroadcast(i)
             } else {
                 if (category != Int.Companion.MAX_VALUE) Tuils.sendOutput(context, s, category)

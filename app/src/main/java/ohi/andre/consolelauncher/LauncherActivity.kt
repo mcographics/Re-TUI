@@ -455,6 +455,7 @@ class LauncherActivity : AppCompatActivity(), Reloadable {
         ViewCompat.setOnApplyWindowInsetsListener(
             mainView,
             OnApplyWindowInsetsListener { view: View?, insets: WindowInsetsCompat? ->
+                val statusBarVisible = insets!!.isVisible(WindowInsetsCompat.Type.statusBars())
                 val safeInsets = insets!!.getInsets(
                     WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
                 )
@@ -479,6 +480,13 @@ class LauncherActivity : AppCompatActivity(), Reloadable {
                         originalRight + safeInsets.right,
                         originalBottom + safeInsets.bottom + keyboardOffset
                     )
+                }
+
+                // A normal launcher cannot disable Android System UI globally,
+                // but it can immediately re-hide a transient status bar while
+                // its own Home activity is visible.
+                if (LauncherSystemUi.fullscreenEnabled() && statusBarVisible) {
+                    view?.post { applyFullscreen(this@LauncherActivity) }
                 }
                 insets
             })

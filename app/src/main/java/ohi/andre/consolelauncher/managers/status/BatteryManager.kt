@@ -70,7 +70,9 @@ class BatteryManager(
             context,
             batteryReceiver,
             filter,
-            ContextCompat.RECEIVER_NOT_EXPORTED
+            // ACTION_BATTERY_CHANGED is sent by Android outside this app. Samsung's
+            // Android 13 build rejects it when this receiver is marked not exported.
+            ContextCompat.RECEIVER_EXPORTED
         )
         registered = true
     }

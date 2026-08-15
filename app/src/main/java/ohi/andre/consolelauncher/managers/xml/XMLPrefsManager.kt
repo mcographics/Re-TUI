@@ -555,6 +555,8 @@ object XMLPrefsManager {
             save === Ui.ascii_max_lines ||
             save === Ui.ascii_pane_height_rows ||
             save === Ui.ascii_status_alignment ||
+            save === Behavior.ascii_system_monitor ||
+            save === Behavior.ascii_system_monitor_interval_ms ||
             save === Behavior.ascii_animation ||
             save === Behavior.ascii_animation_frame_delay_ms ||
             save === Behavior.ascii_animation_max_file_kb ||

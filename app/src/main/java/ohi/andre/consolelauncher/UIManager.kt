@@ -37,6 +37,7 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.StaticLayout
 import android.text.TextUtils
+import android.text.TextPaint
 import android.text.TextWatcher
 import android.text.method.LinkMovementMethod
 import android.text.style.BackgroundColorSpan
@@ -153,10 +154,16 @@ import ohi.andre.consolelauncher.managers.status.NotesManager
 import ohi.andre.consolelauncher.managers.status.RamManager
 import ohi.andre.consolelauncher.managers.status.StatusUpdateListener
 import ohi.andre.consolelauncher.managers.status.StorageManager
+import ohi.andre.consolelauncher.managers.status.SystemMonitorManager
 import ohi.andre.consolelauncher.managers.status.TimeManager
 import ohi.andre.consolelauncher.managers.status.UnlockManager
 import ohi.andre.consolelauncher.managers.status.WeatherManager
 import ohi.andre.consolelauncher.managers.status.WeatherResponseParser
+import ohi.andre.consolelauncher.managers.status.WeatherDisplayData
+import ohi.andre.consolelauncher.managers.status.WeatherIntentContract
+import ohi.andre.consolelauncher.managers.status.WeatherLineFormatter
+import ohi.andre.consolelauncher.managers.status.WeatherLineState
+import ohi.andre.consolelauncher.managers.status.WeatherSvgIconSpan
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionTextWatcher
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager
 import ohi.andre.consolelauncher.managers.termux.TermuxBridgeCache.dirs
@@ -613,6 +620,7 @@ class UIManager(
 
     private var asciiColor = 0
     private var asciiAnimationManager: AsciiAnimationManager? = null
+    private var systemMonitorManager: SystemMonitorManager? = null
     private var asciiIdlePaused = false
     private var launcherWindowFocused = true
     private val asciiIdlePauseRunnable = Runnable {
@@ -830,6 +838,78 @@ class UIManager(
     private var lastWeatherText: CharSequence? = null
     private var lastWeatherSymbol: String? = null
     private var lastWeatherUpdateMillis: Long = 0
+    private var lastWeatherDisplayData: WeatherDisplayData? = null
+    private var lastWeatherLineState: WeatherLineState? = null
+
+    private fun renderTerminalWeather(intent: Intent): Boolean {
+        if (!XMLPrefsManager.getBoolean(Behavior.weather_terminal_line)) return false
+        val state = WeatherIntentContract.state(intent) ?: return false
+        val data = WeatherIntentContract.data(intent)
+        if ((state == WeatherLineState.READY || state == WeatherLineState.CACHED) && data == null) {
+            return false
+        }
+
+        lastWeatherLineState = state
+        lastWeatherDisplayData = data
+        val view = getLabelView(Label.weather) ?: return true
+        val render = Runnable {
+            val currentState = lastWeatherLineState ?: return@Runnable
+            val currentData = lastWeatherDisplayData
+            val line = if (currentData != null &&
+                (currentState == WeatherLineState.READY || currentState == WeatherLineState.CACHED)
+            ) {
+                val configuredLabel = XMLPrefsManager.get(Behavior.weather_location_label)
+                    ?.trim()
+                    .orEmpty()
+                val locationLabel = configuredLabel.ifBlank {
+                    XMLPrefsManager.get(Behavior.weather_location)?.trim().orEmpty()
+                }
+                val availableWidth = (view.width - view.paddingLeft - view.paddingRight)
+                    .takeIf { it > 0 }
+                    ?.toFloat()
+                    ?: (mContext!!.resources.displayMetrics.widthPixels * 0.9f)
+                val textPaint = TextPaint(view.paint).apply {
+                    textSize = Tuils.convertSpToPixels(
+                        labelSizes[Label.weather.ordinal].toFloat(),
+                        mContext!!
+                    ).toFloat()
+                }
+                WeatherLineFormatter.select(locationLabel, currentData, availableWidth) {
+                    textPaint.measureText(it)
+                }
+            } else {
+                WeatherLineFormatter.stateLine(currentState)
+            }
+
+            val rawBlock = WeatherLineFormatter.statusBlock(line)
+            val styled = Tuils.span(
+                mContext!!,
+                rawBlock,
+                weatherColor,
+                labelSizes[Label.weather.ordinal]
+            )
+            val iconIndex = rawBlock.indexOf(WeatherLineFormatter.ICON_PLACEHOLDER)
+            if (iconIndex >= 0) {
+                val icon = WeatherSvgIconSpan.create(
+                    mContext!!,
+                    currentData?.condition ?: ohi.andre.consolelauncher.managers.status.WeatherCondition.UNKNOWN,
+                    weatherColor
+                )
+                if (icon != null) {
+                    styled.setSpan(
+                        icon,
+                        iconIndex,
+                        iconIndex + 1,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
+            }
+            updateText(Label.weather, styled)
+        }
+
+        if (view.width > 0) render.run() else view.post(render)
+        return true
+    }
 
     //    you need to use labelIndexes[i]
     private fun updateText(l: Label, s: CharSequence?) {
@@ -974,15 +1054,17 @@ class UIManager(
     private inner class PagerAdapter : RecyclerView.Adapter<PagerViewHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PagerViewHolder {
             val inflater = LayoutInflater.from(parent.getContext())
-            val view: View = if (viewType == TERMUX_WORKSPACE_PAGE_INDEX) {
-                inflater.inflate(R.layout.termux_workspace_page, parent, false)
-            } else {
-                inflater.inflate(R.layout.home_modules_page, parent, false)
+            val view: View = when (viewType) {
+                HomeSurfacePager.TERMUX_PAGE ->
+                    inflater.inflate(R.layout.termux_workspace_page, parent, false)
+                HomeSurfacePager.WALLPAPER_PAGE ->
+                    inflater.inflate(R.layout.wallpaper_page, parent, false)
+                else -> inflater.inflate(R.layout.home_modules_page, parent, false)
             }
-            if (viewType == TERMUX_WORKSPACE_PAGE_INDEX) {
-                setupTermuxWorkspacePage(view)
-            } else {
-                setupHomeWidgetsPage(view)
+            when (viewType) {
+                HomeSurfacePager.TERMUX_PAGE -> setupTermuxWorkspacePage(view)
+                HomeSurfacePager.WALLPAPER_PAGE -> view.setOnTouchListener(this@UIManager)
+                else -> setupHomeWidgetsPage(view)
             }
             // ViewPager2 requires match_parent for its children
             view.setLayoutParams(
@@ -995,11 +1077,11 @@ class UIManager(
         }
 
         override fun onBindViewHolder(holder: PagerViewHolder, position: Int) {
-            // Home module surfaces are created when the single pager page is inflated.
+            // Page surfaces are initialized when their view holders are created.
         }
 
         override fun getItemCount(): Int {
-            return TERMUX_WORKSPACE_PAGE_COUNT
+            return HomeSurfacePager.PAGE_COUNT
         }
 
         override fun getItemViewType(position: Int): Int {
@@ -1026,6 +1108,12 @@ class UIManager(
     private val mRootView: View?
 
     private val viewPager: ViewPager2
+    private var wallpaperPageActive = false
+    private var wallpaperPageVisualsCaptured = false
+    private var dashboardBackground: Drawable? = null
+    private var dashboardForeground: Drawable? = null
+    private var dashboardMainVisibility = View.VISIBLE
+    private var dashboardTrayVisibility = View.VISIBLE
     private var homeModulesContainer: ViewGroup? = null
     private var mainContainer: View? = null
     private var headerContainer: ViewGroup? = null
@@ -2535,6 +2623,7 @@ class UIManager(
     }
 
     private fun setupHomeWidgetsPage(homePage: View) {
+        homePage.setOnTouchListener(this)
         moduleDockScroll = homePage.findViewById<View?>(R.id.module_dock_scroll)
         if (moduleDockScroll != null) {
             moduleDockScroll!!.getViewTreeObserver()
@@ -3395,7 +3484,104 @@ class UIManager(
         }
         stopTermuxWorkspaceSocketClient()
         setTermuxWorkspaceChromeActive(false)
-        viewPager.setCurrentItem(0, true)
+        setWallpaperPageActive(false, false)
+        viewPager.setCurrentItem(HomeSurfacePager.DASHBOARD_PAGE, true)
+    }
+
+    private fun setWallpaperPageActive(active: Boolean, animate: Boolean = true) {
+        if (active == wallpaperPageActive) {
+            return
+        }
+
+        wallpaperPageActive = active
+        captureWallpaperPageVisuals()
+        closeKeyboard()
+        mTerminalAdapter?.inputView?.clearFocus()
+
+        val root = mRootView ?: return
+        val travel = root.width.takeIf { it > 0 }
+            ?: mContext.resources.displayMetrics.widthPixels
+        val chrome = listOfNotNull(mainContainer, terminalTrayContainer)
+
+        chrome.forEach { it.animate().cancel() }
+        if (active) {
+            dashboardMainVisibility = mainContainer?.visibility ?: View.VISIBLE
+            dashboardTrayVisibility = terminalTrayContainer?.visibility ?: View.VISIBLE
+            viewPager.setCurrentItem(HomeSurfacePager.WALLPAPER_PAGE, false)
+            root.background = ColorDrawable(Color.TRANSPARENT)
+            root.foreground = null
+
+            chrome.forEach { view ->
+                if (!animate || view.visibility != View.VISIBLE) {
+                    view.visibility = View.INVISIBLE
+                    view.translationX = 0f
+                } else {
+                    view.animate()
+                        .translationX(-travel.toFloat())
+                        .setDuration(WALLPAPER_PAGE_TRANSITION_MS)
+                        .withEndAction {
+                            if (wallpaperPageActive) {
+                                view.visibility = View.INVISIBLE
+                                view.translationX = 0f
+                            }
+                        }
+                        .start()
+                }
+            }
+            return
+        }
+
+        root.background = dashboardBackground
+        root.foreground = dashboardForeground
+        viewPager.setCurrentItem(HomeSurfacePager.DASHBOARD_PAGE, false)
+        restoreDashboardView(mainContainer, dashboardMainVisibility, travel, animate)
+        restoreDashboardView(terminalTrayContainer, dashboardTrayVisibility, travel, animate)
+    }
+
+    private fun captureWallpaperPageVisuals() {
+        if (wallpaperPageVisualsCaptured || mRootView == null) {
+            return
+        }
+        dashboardBackground = mRootView.background
+        dashboardForeground = mRootView.foreground
+        wallpaperPageVisualsCaptured = true
+    }
+
+    private fun restoreDashboardView(
+        view: View?,
+        priorVisibility: Int,
+        travel: Int,
+        animate: Boolean
+    ) {
+        if (view == null) {
+            return
+        }
+        view.animate().cancel()
+        view.visibility = priorVisibility
+        if (priorVisibility != View.VISIBLE || !animate) {
+            view.translationX = 0f
+            return
+        }
+        view.translationX = -travel.toFloat()
+        view.animate()
+            .translationX(0f)
+            .setDuration(WALLPAPER_PAGE_TRANSITION_MS)
+            .start()
+    }
+
+    private fun handleWallpaperPageFling(velocityX: Float, velocityY: Float): Boolean {
+        val target = HomeSurfacePager.targetPage(viewPager.currentItem, velocityX, velocityY)
+            ?: return false
+        setWallpaperPageActive(target == HomeSurfacePager.WALLPAPER_PAGE)
+        return true
+    }
+
+    private fun handleWallpaperPageBackPressed(): Boolean {
+        if (!wallpaperPageActive) {
+            return false
+        }
+        setWallpaperPageActive(false)
+        return true
     }
 
     private fun setTermuxWorkspaceChromeActive(active: Boolean) {
@@ -8220,13 +8406,24 @@ class UIManager(
                     if (s == null) return
 
                     lastWeatherText = s
-                    lastWeatherSymbol = intent.getStringExtra(WEATHER_SYMBOL)
-                    lastWeatherUpdateMillis = System.currentTimeMillis()
-                    s = Tuils.span(context, s, weatherColor, labelSizes[Label.weather.ordinal])
+                    val displayData = WeatherIntentContract.data(intent)
+                    lastWeatherSymbol = displayData?.symbolCode
+                        ?: intent.getStringExtra(WEATHER_SYMBOL)
+                    val weatherState = WeatherIntentContract.state(intent)
+                    if (weatherState == WeatherLineState.READY) {
+                        lastWeatherUpdateMillis = System.currentTimeMillis()
+                    } else if (weatherState == WeatherLineState.CACHED) {
+                        lastWeatherUpdateMillis = intent.getLongExtra(
+                            WeatherIntentContract.EXTRA_SAVED_AT,
+                            lastWeatherUpdateMillis
+                        )
+                    }
+                    if (!renderTerminalWeather(intent)) {
+                        s = Tuils.span(context, s, weatherColor, labelSizes[Label.weather.ordinal])
+                        updateText(Label.weather, s)
+                    }
 
-                    updateText(Label.weather, s)
-
-                    if (showWeatherUpdate) {
+                    if (showWeatherUpdate && weatherState == WeatherLineState.READY) {
                         val message =
                             context.getString(R.string.weather_updated) + Tuils.SPACE + c.get(
                                 Calendar.HOUR_OF_DAY
@@ -8438,7 +8635,9 @@ class UIManager(
         swipeDownNotifications = XMLPrefsManager.getBoolean(Behavior.swipe_down_notifications)
         swipeUpAppsDrawer = false
 
-        if (!lockOnDbTap && doubleTapCmd == null && !swipeDownNotifications && !swipeUpAppsDrawer) {
+        if (!lockOnDbTap && doubleTapCmd == null && !swipeDownNotifications &&
+            !swipeUpAppsDrawer && !WALLPAPER_PAGE_ENABLED
+        ) {
             policy = null
             component = null
             gestureDetector = null
@@ -8446,7 +8645,7 @@ class UIManager(
             gestureDetector =
                 GestureDetectorCompat(mContext!!, object : GestureDetector.OnGestureListener {
                     override fun onDown(e: MotionEvent): Boolean {
-                        return false
+                        return true
                     }
 
                     override fun onShowPress(e: MotionEvent) {}
@@ -8478,7 +8677,7 @@ class UIManager(
                         ) {
                             return openNotificationShade()
                         }
-                        return false
+                        return handleWallpaperPageFling(velocityX, velocityY)
                     }
                 })
 
@@ -8795,11 +8994,19 @@ class UIManager(
                     !unifiedStatusBorder,
                     !unifiedStatusBorder
                 )
+                val statusTopInset =
+                    if (os.firstOrNull() == Label.weather &&
+                        XMLPrefsManager.getBoolean(Behavior.weather_terminal_line)
+                    ) 0 else statusTextInsets[1]
+                val statusBottomInset =
+                    if (os.firstOrNull() == Label.ascii &&
+                        XMLPrefsManager.getBoolean(Behavior.ascii_system_monitor)
+                    ) 0 else statusTextInsets[3]
                 labelViews[count]!!.setPadding(
                     statusTextInsets[0],
-                    statusTextInsets[1],
+                    statusTopInset,
                     statusTextInsets[2],
-                    statusTextInsets[3]
+                    statusBottomInset
                 )
                 Companion.applyShadow(
                     labelViews[count]!!,
@@ -8960,21 +9167,33 @@ class UIManager(
             }
             applyAsciiDisplayLimits(asciiView)
 
-            asciiAnimationManager = AsciiAnimationManager(
-                XMLPrefsManager.getInt(Behavior.ascii_animation_frame_delay_ms).toLong(),
-                asciiColor,
-                statusUpdateListener
-            )
-
-            updateText(
-                Label.ascii,
-                asciiAnimationManager!!.load(
-                    asciiFile,
-                    XMLPrefsManager.getBoolean(Behavior.ascii_animation)
+            if (XMLPrefsManager.getBoolean(Behavior.ascii_system_monitor)) {
+                val monitorDelay = XMLPrefsManager
+                    .getInt(Behavior.ascii_system_monitor_interval_ms)
+                    .coerceIn(500, 5000)
+                systemMonitorManager = SystemMonitorManager(
+                    mContext!!,
+                    monitorDelay.toLong(),
+                    statusUpdateListener,
                 )
-            )
-            asciiAnimationManager!!.start()
-            scheduleAsciiIdlePause()
+                systemMonitorManager!!.start()
+            } else {
+                asciiAnimationManager = AsciiAnimationManager(
+                    XMLPrefsManager.getInt(Behavior.ascii_animation_frame_delay_ms).toLong(),
+                    asciiColor,
+                    statusUpdateListener
+                )
+
+                updateText(
+                    Label.ascii,
+                    asciiAnimationManager!!.load(
+                        asciiFile,
+                        XMLPrefsManager.getBoolean(Behavior.ascii_animation)
+                    )
+                )
+                asciiAnimationManager!!.start()
+                scheduleAsciiIdlePause()
+            }
         }
 
         if (show[Label.unlock.ordinal]) {
@@ -8986,14 +9205,15 @@ class UIManager(
         // Setup ViewPager2
         viewPager = mRootView.findViewById<ViewPager2>(R.id.view_pager)
         viewPager.setAdapter(PagerAdapter())
-        viewPager.setOffscreenPageLimit(1)
+        viewPager.setOffscreenPageLimit(2)
         viewPager.setUserInputEnabled(false)
         viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 if (position == TERMUX_WORKSPACE_PAGE_INDEX) {
+                    wallpaperPageActive = false
                     setTermuxWorkspaceChromeActive(true)
                     openTermuxWorkspacePage(false)
-                } else {
+                } else if (position == HomeSurfacePager.DASHBOARD_PAGE) {
                     setTermuxWorkspaceChromeActive(false)
                 }
             }
@@ -11997,7 +12217,10 @@ class UIManager(
     }
 
     fun consumeBackPressed(): Boolean {
-        return handleTermuxWorkspaceBackPressed() || handleTermuxBackPressed() || handlePodcastBackPressed()
+        return handleWallpaperPageBackPressed() ||
+            handleTermuxWorkspaceBackPressed() ||
+            handleTermuxBackPressed() ||
+            handlePodcastBackPressed()
     }
 
     private fun focusTermuxInput(showKeyboard: Boolean) {
@@ -15743,6 +15966,7 @@ class UIManager(
         }
 
         asciiAnimationManager?.stop()
+        systemMonitorManager?.stop()
         if (suggestionsManager != null) suggestionsManager!!.dispose()
         if (notesManager != null) notesManager!!.dispose(mContext)
         androidWidgetDrawerManager?.dispose()
@@ -15885,6 +16109,9 @@ class UIManager(
     }
 
     fun onBackPressed() {
+        if (handleWallpaperPageBackPressed()) {
+            return
+        }
         if (handleTermuxWorkspaceBackPressed()) {
             return
         }
@@ -15985,6 +16212,7 @@ class UIManager(
         if (networkManager != null) networkManager!!.stop()
         if (tuiTimeManager != null) tuiTimeManager!!.stop()
         if (unlockManager != null) unlockManager!!.stop()
+        systemMonitorManager?.stop()
         pauseAsciiAnimation()
         androidWidgetDrawerManager?.stopListening()
     }
@@ -16045,6 +16273,7 @@ class UIManager(
         if (networkManager != null) networkManager!!.start()
         if (tuiTimeManager != null) tuiTimeManager!!.start()
         if (unlockManager != null) unlockManager!!.start()
+        systemMonitorManager?.start()
         resumeAsciiAnimation()
         if (androidWidgetDrawerManager?.isOpen == true) {
             androidWidgetDrawerManager?.startListening()
@@ -16382,7 +16611,9 @@ class UIManager(
         private const val TERMUX_CONSOLE_RESULT_PREFIX = "retui-console:"
         private const val TERMUX_APP_RESULT_PREFIX = "retui-app:"
         private const val TERMUX_APP_SYNC_RESULT_PREFIX = "retui-app-sync:"
-        private const val TERMUX_WORKSPACE_PAGE_INDEX = 1
+        private const val WALLPAPER_PAGE_ENABLED = true
+        private const val WALLPAPER_PAGE_TRANSITION_MS = 220L
+        private const val TERMUX_WORKSPACE_PAGE_INDEX = HomeSurfacePager.TERMUX_PAGE
         private const val PODCAST_MODE_SHOWS = 0
         private const val PODCAST_MODE_RECENTS = 1
         private const val PODCAST_MODE_SHOW_DETAIL = 2
@@ -16398,7 +16629,6 @@ class UIManager(
         private const val PODCAST_CHROME_PEEK_DP = 36
         private const val PODCAST_CHROME_PEEK_ALPHA = 0.92f
         private const val CALCULATOR_MAX_EXPRESSION_LENGTH = 96
-        private const val TERMUX_WORKSPACE_PAGE_COUNT = 2
         private const val TERMUX_WORKSPACE_SESSION = "retui_workspace"
         private const val TERMUX_WORKSPACE_RESULT_PREFIX = "retui-workspace:"
         private const val TERMUX_WORKSPACE_SOCKET_NAME = "retui_bridge_com_dvil_tui_renewed_v2"

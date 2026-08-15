@@ -31,6 +31,18 @@ object LauncherSystemUi {
             return
         }
         hideStatusBar(activity.window)
+
+        // Samsung System UI can restore the status bar shortly after a Home,
+        // unlock, or transient-system-bar transition. Reassert fullscreen after
+        // those animations settle, without hiding Android's navigation bar.
+        val decorView = activity.window.decorView
+        listOf(120L, 500L).forEach { delay ->
+            decorView.postDelayed({
+                if (!activity.isFinishing && !activity.isDestroyed && fullscreenEnabled()) {
+                    hideStatusBar(activity.window)
+                }
+            }, delay)
+        }
     }
 
     @JvmStatic
@@ -62,7 +74,8 @@ object LauncherSystemUi {
             decorView.systemUiVisibility = decorView.systemUiVisibility or
                 View.SYSTEM_UI_FLAG_FULLSCREEN or
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
         }
     }
 }
