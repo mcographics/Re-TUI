@@ -4,7 +4,7 @@
 package for the Build 408 dashboard.
 
 SHA-256:
-`E5ADACCB40A8D6B156CE56CAE438D5A99AC55C2B6F8031D15ED978F924E45314`
+`EF0E842C50CD341F3620B865052A241EAC9696CAA83C1E46CDE8925DCF5DA74A`
 
 The public package is sanitized:
 
@@ -27,6 +27,8 @@ The preset supplies the appearance and dashboard configuration. Live system
 monitoring, compact weather formatting, two-page Home behavior, and persistent
 launcher fullscreen are implemented by the Build 408 application code. The
 preset also enables the full-height, top-aligned notification/output tray.
+Notification titles and bodies use a consistent left edge so wrapped lines do
+not collide visually with timestamps or neighboring notification blocks.
 
 ## Apply
 
