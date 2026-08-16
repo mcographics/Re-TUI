@@ -4,7 +4,7 @@ Re:TUI is my continuation of the original T-UI Launcher: a terminal-style Androi
 
 The goal is not to turn T-UI into a conventional launcher with a terminal theme painted over it. I want to keep the command-first character that made the original special while making it practical on current Android versions. That means modern storage, safer integrations, touch-friendly panes where they genuinely help, and physical-device testing instead of assuming the emulator tells the whole story.
 
-> **Build 408 fork feature:** The `feature/red-terminal-dashboard-build406` branch adds a live red terminal dashboard, compact weather, real-time system monitoring, a wallpaper-only Home page, a 12-hour clock, launcher-scoped fullscreen handling, Android notification clearing, and a full-height top-aligned notification tray. See [Build 408 Red Terminal Dashboard](docs/BUILD_406_RED_TERMINAL_DASHBOARD.md) for the feature and verification record.
+> **Build 409 fork feature:** The `feature/red-terminal-dashboard-build406` branch adds a live red terminal dashboard, compact weather, real-time system monitoring, a wallpaper-only Home page, a 12-hour clock, launcher-scoped fullscreen handling, Android notification clearing, and a full-height top-aligned notification tray that stays anchored when the keyboard opens. See [Build 409 Red Terminal Dashboard](docs/BUILD_406_RED_TERMINAL_DASHBOARD.md) for the feature and verification record.
 
 ---
 

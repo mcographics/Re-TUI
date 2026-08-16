@@ -2455,14 +2455,13 @@ class UIManager(
             expandedHeight =
                 max(collapsedHeight, UIUtils.dpToPx(mContext!!, if (keyboardVisible) 220 else 320))
         } else {
-            val trayPercent = if (keyboardVisible) {
-                0.34f
-            } else if ("top" == outputContentAlignment()) {
-                0.52f
-            } else {
-                0.48f
-            }
-            expandedHeight = max(collapsedHeight, Math.round(rootHeight * trayPercent))
+            expandedHeight = TerminalTrayGeometry.expandedHeight(
+                rootHeight,
+                collapsedHeight,
+                keyboardVisible,
+                imeBottomOffset,
+                "top" == outputContentAlignment()
+            )
         }
         return applyTerminalTrayMaxHeight(expandedHeight, collapsedHeight)
     }

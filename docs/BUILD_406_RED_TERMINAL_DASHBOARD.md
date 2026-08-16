@@ -1,6 +1,6 @@
-# Build 408 Red Terminal Dashboard
+# Build 409 Red Terminal Dashboard
 
-Build 408 extends the Re:TUI Build 400 line with a compact, functional Home
+Build 409 extends the Re:TUI Build 400 line with a compact, functional Home
 dashboard designed and verified on a Samsung Galaxy S20 FE (SM-G781W).
 
 This branch preserves the command-first Re:TUI foundation and upstream Git
@@ -52,6 +52,9 @@ or a modified operating system.
 - Output is top-aligned, so the first notification no longer appears near the
   bottom of an otherwise empty tray. Longer content uses the available height
   and remains scrollable.
+- When the keyboard opens, its inset is removed from the tray's height as the
+  tray bottom rises. This keeps the top edge anchored beneath `NOTIFICATIONS`
+  instead of allowing output to move into the weather or system-monitor rows.
 - `output_content_alignment` is opt-in and defaults to `bottom`, preserving the
   established layout for other Re:TUI themes.
 - The `clear` command clears launcher output and requests dismissal of all
@@ -81,15 +84,17 @@ archive does not publish the phone owner's personalized configuration.
 ## Verification
 
 - Variant: `fdroidDebug`
-- Android version code: `408`
-- Android version name: `2-expanded-notification-area`
-- Unit tests: 94 tests across 31 suites
+- Android version code: `409`
+- Android version name: `2-stable-ime-notifications`
+- Unit tests: 98 tests across 32 suites
 - Unit-test failures/errors: 0
 - APK assembly: successful
 - Physical-device install and launch: successful
 - Dashboard-to-wallpaper and wallpaper-to-dashboard gestures: verified
 - Fullscreen recovery after a transient top-edge system-bar reveal: verified
 - Full-height, top-aligned notification/output tray: verified on device
+- Stable notification/output tray position with the keyboard open: verified on
+  device
 - `clear` dismissed all clearable Android notifications; ongoing protected
   notifications remained as required by Android
 
