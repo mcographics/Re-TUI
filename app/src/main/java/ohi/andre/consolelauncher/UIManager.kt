@@ -91,6 +91,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import okhttp3.Request
 import ohi.andre.consolelauncher.commands.main.MainPack
+import ohi.andre.consolelauncher.managers.AppsManager
 import ohi.andre.consolelauncher.commands.main.raw.tbridge
 import ohi.andre.consolelauncher.commands.main.specific.RedirectCommand
 import ohi.andre.consolelauncher.commands.tuixt.BreachDialog
@@ -8810,6 +8811,7 @@ class UIManager(
             rootView.findViewById<View?>(R.id.tv9) as TextView?,
         )
         populateHeaderQuickApps()
+        mRootView?.postDelayed({ populateHeaderQuickApps() }, 1200L)
         Arrays.fill(labelIndexes, LABEL_INDEX_UNMAPPED)
         Arrays.fill(labelTexts, null)
 
@@ -9290,7 +9292,18 @@ class UIManager(
     private fun populateHeaderQuickApps() {
         val row = mRootView?.findViewById<LinearLayout>(R.id.header_quick_apps_row) ?: return
         row.removeAllViews()
-        mainPack.appsManager.suggestedApps.filterNotNull().take(7).forEach { info ->
+        val ranked = mainPack.appsManager.shownApps()
+            .filter { it.componentName?.packageName != mContext.packageName }
+            .sortedByDescending { it.launchedTimes }
+        val candidates = ArrayList<AppsManager.LaunchInfo>()
+        for (info in mainPack.appsManager.suggestedApps) {
+            if (info != null && candidates.none { it.componentName == info.componentName }) candidates.add(info)
+        }
+        for (info in ranked) {
+            if (candidates.size >= 7) break
+            if (candidates.none { it.componentName == info.componentName }) candidates.add(info)
+        }
+        candidates.forEach { info ->
             val button = ImageButton(mContext)
             button.layoutParams = LinearLayout.LayoutParams(
                 Tuils.dpToPx(mContext, 42f).toInt(), Tuils.dpToPx(mContext, 42f).toInt()
