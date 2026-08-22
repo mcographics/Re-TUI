@@ -9292,29 +9292,28 @@ class UIManager(
     private fun populateHeaderQuickApps() {
         val row = mRootView?.findViewById<LinearLayout>(R.id.header_quick_apps_row) ?: return
         row.removeAllViews()
-        val ranked = mainPack.appsManager.shownApps()
-            .filter { it.componentName?.packageName != mContext.packageName }
-            .sortedByDescending { it.launchedTimes }
         val candidates = ArrayList<AppsManager.LaunchInfo>()
-        for (info in mainPack.appsManager.suggestedApps) {
-            if (info != null && candidates.none { it.componentName == info.componentName }) candidates.add(info)
-        }
-        for (info in ranked) {
-            if (candidates.size >= 7) break
-            if (candidates.none { it.componentName == info.componentName }) candidates.add(info)
-        }
-        if (candidates.size < 7) {
-            val launchIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
-            mContext.packageManager.queryIntentActivities(launchIntent, 0).forEach { resolve ->
-                if (candidates.size >= 7) return@forEach
-                val activity = resolve.activityInfo ?: return@forEach
-                if (activity.packageName == mContext.packageName) return@forEach
-                val info = AppsManager.LaunchInfo(
-                    activity.packageName, activity.name,
-                    resolve.loadLabel(mContext.packageManager).toString()
-                )
-                if (candidates.none { it.componentName == info.componentName }) candidates.add(info)
-            }
+        val fixedPackages = listOf(
+            "com.android.settings", // Settings
+            "com.brave.browser", // Brave
+            "com.openai.chatgpt", // ChatGPT
+            "com.twitter.android", // X
+            "com.facebook.katana", // Facebook
+            "com.google.android.apps.messaging" // Google Messages
+        )
+        val launchIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+        val launchables = mContext.packageManager.queryIntentActivities(launchIntent, 0)
+        val phonePackage = if (launchables.any { it.activityInfo?.packageName == "com.samsung.android.dialer" })
+            "com.samsung.android.dialer" else "com.android.dialer"
+        val orderedPackages = listOf(phonePackage) + fixedPackages
+        for (packageName in orderedPackages) {
+            val resolve = launchables.firstOrNull { it.activityInfo?.packageName == packageName }
+                ?: continue
+            val activity = resolve.activityInfo ?: continue
+            candidates.add(AppsManager.LaunchInfo(
+                activity.packageName, activity.name,
+                resolve.loadLabel(mContext.packageManager).toString()
+            ))
         }
         candidates.forEach { info ->
             val button = ImageButton(mContext)
