@@ -8809,6 +8809,7 @@ class UIManager(
             rootView.findViewById<View?>(R.id.tv8) as TextView?,
             rootView.findViewById<View?>(R.id.tv9) as TextView?,
         )
+        populateHeaderQuickApps()
         Arrays.fill(labelIndexes, LABEL_INDEX_UNMAPPED)
         Arrays.fill(labelTexts, null)
 
@@ -9284,6 +9285,25 @@ class UIManager(
         ClockManager.getInstance(context.getApplicationContext()).broadcastState()
 
         scheduleTypefaceRefreshes()
+    }
+
+    private fun populateHeaderQuickApps() {
+        val row = mRootView?.findViewById<LinearLayout>(R.id.header_quick_apps_row) ?: return
+        row.removeAllViews()
+        mainPack.appsManager.suggestedApps.filterNotNull().take(7).forEach { info ->
+            val button = ImageButton(mContext)
+            button.layoutParams = LinearLayout.LayoutParams(
+                Tuils.dpToPx(mContext, 42f).toInt(), Tuils.dpToPx(mContext, 42f).toInt()
+            ).apply { marginEnd = Tuils.dpToPx(mContext, 5f).toInt() }
+            button.setPadding(8, 8, 8, 8)
+            button.background = null
+            button.contentDescription = info.publicLabel
+            try {
+                button.setImageDrawable(mContext.packageManager.getActivityInfo(info.componentName!!, 0).loadIcon(mContext.packageManager))
+            } catch (_: Exception) { return@forEach }
+            button.setOnClickListener { mainPack.appsManager.launch(mContext, info) }
+            row.addView(button)
+        }
     }
 
     private fun installCrtOverlay(rootView: ViewGroup) {
