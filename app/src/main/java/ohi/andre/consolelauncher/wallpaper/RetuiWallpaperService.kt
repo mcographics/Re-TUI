@@ -59,6 +59,7 @@ class RetuiWallpaperService : WallpaperService() {
 
         override fun onCreate(surfaceHolder: SurfaceHolder) {
             super.onCreate(surfaceHolder)
+            if (view is RedMatrixView) (view as RedMatrixView).startParallax()
             ContextCompat.registerReceiver(
                 this@RetuiWallpaperService,
                 screenReceiver,
@@ -81,11 +82,13 @@ class RetuiWallpaperService : WallpaperService() {
                     layoutView(surfaceHolder.surfaceFrame.width(), surfaceHolder.surfaceFrame.height())
                 }
                 loadPosition()
+                if (view is RedMatrixView) (view as RedMatrixView).startParallax()
                 fullRedrawPending = true
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
                     notifyColorsChanged()
                 }
             }
+            else if (view is RedMatrixView) (view as RedMatrixView).stopParallax()
             scheduleIfVisible()
         }
 
@@ -123,6 +126,7 @@ class RetuiWallpaperService : WallpaperService() {
 
         override fun onDestroy() {
             handler.removeCallbacks(drawFrame)
+            if (view is RedMatrixView) (view as RedMatrixView).stopParallax()
             if (receiverRegistered) {
                 unregisterReceiver(screenReceiver)
                 receiverRegistered = false

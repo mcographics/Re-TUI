@@ -23,13 +23,12 @@ class RedMatrixView(context: Context) : View(context), SensorEventListener {
     private data class Drop(var y: Float, val speed: Float, val length: Int, val depth: Float, val seed: Int)
 
     init { isFocusable = false }
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
+    fun startParallax() {
         sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)?.let {
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME)
         }
     }
-    override fun onDetachedFromWindow() { sensorManager.unregisterListener(this); super.onDetachedFromWindow() }
+    fun stopParallax() { sensorManager.unregisterListener(this) }
     override fun onSensorChanged(event: SensorEvent) {
         tiltX += ((event.values.getOrNull(1) ?: 0f) * 10f - tiltX) * .08f
         tiltY += ((event.values.getOrNull(0) ?: 0f) * 8f - tiltY) * .08f
