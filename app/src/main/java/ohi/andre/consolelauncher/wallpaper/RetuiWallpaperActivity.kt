@@ -64,7 +64,7 @@ class RetuiWallpaperActivity : AppCompatActivity() {
         }
         val selectors = row()
         selectors.addView(label("WALLPAPER"))
-        val scenes = listOf("csakura", "black hole", "solid")
+        val scenes = listOf("csakura", "black hole", "red matrix", "solid")
         selectors.addView(spinner(scenes, scenes.indexOf(scene).coerceAtLeast(0), ::switchScene))
         selectors.addView(label("COLOR"))
         colorSpinner = paletteSpinner()
@@ -152,6 +152,7 @@ class RetuiWallpaperActivity : AppCompatActivity() {
 
     private fun createPreview(name: String): android.view.View = when (name) {
         "black hole" -> BlackHoleView(this).apply { loadPosition() }
+        "red matrix" -> RedMatrixView(this)
         "solid" -> SolidColorView(this)
         else -> CsakuraView(this).apply { loadPosition() }
     }.also { view ->

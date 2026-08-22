@@ -10,6 +10,7 @@ import android.os.Looper
 import android.os.PowerManager
 import android.service.wallpaper.WallpaperService
 import android.app.WallpaperColors
+import android.graphics.Color
 import android.view.SurfaceHolder
 import android.view.View
 import androidx.core.content.ContextCompat
@@ -92,6 +93,7 @@ class RetuiWallpaperService : WallpaperService() {
         override fun onComputeColors(): WallpaperColors = when (val current = view) {
             is BlackHoleView -> current.wallpaperColors()
             is CsakuraView -> current.wallpaperColors()
+            is RedMatrixView -> WallpaperColors(Color.valueOf(Color.rgb(90, 0, 0)), null, null)
             else -> (current as SolidColorView).wallpaperColors()
         }
 
@@ -174,12 +176,14 @@ class RetuiWallpaperService : WallpaperService() {
         private fun createView(): View = when (RetuiWallpaperSettings.scene(this@RetuiWallpaperService)) {
             "black hole" -> BlackHoleView(this@RetuiWallpaperService).apply { loadPosition() }
             "solid" -> SolidColorView(this@RetuiWallpaperService)
+            "red matrix" -> RedMatrixView(this@RetuiWallpaperService)
             else -> CsakuraView(this@RetuiWallpaperService).apply { loadPosition() }
         }
 
         private fun viewMatchesScene(scene: String): Boolean = when (scene) {
             "black hole" -> view is BlackHoleView
             "solid" -> view is SolidColorView
+            "red matrix" -> view is RedMatrixView
             else -> view is CsakuraView
         }
 
