@@ -9303,6 +9303,19 @@ class UIManager(
             if (candidates.size >= 7) break
             if (candidates.none { it.componentName == info.componentName }) candidates.add(info)
         }
+        if (candidates.size < 7) {
+            val launchIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+            mContext.packageManager.queryIntentActivities(launchIntent, 0).forEach { resolve ->
+                if (candidates.size >= 7) return@forEach
+                val activity = resolve.activityInfo ?: return@forEach
+                if (activity.packageName == mContext.packageName) return@forEach
+                val info = AppsManager.LaunchInfo(
+                    activity.packageName, activity.name,
+                    resolve.loadLabel(mContext.packageManager).toString()
+                )
+                if (candidates.none { it.componentName == info.componentName }) candidates.add(info)
+            }
+        }
         candidates.forEach { info ->
             val button = ImageButton(mContext)
             button.layoutParams = LinearLayout.LayoutParams(
