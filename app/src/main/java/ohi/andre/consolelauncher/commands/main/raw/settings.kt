@@ -7,9 +7,16 @@ import ohi.andre.consolelauncher.commands.ExecutePack
 import ohi.andre.consolelauncher.commands.main.MainPack
 import ohi.andre.consolelauncher.commands.tuixt.ThemerActivity
 import ohi.andre.consolelauncher.tuils.Tuils
+import android.content.Intent
+import android.provider.Settings
 
 class settings : CommandAbstraction {
-    override fun exec(pack: ExecutePack): String = openSettings(pack, ThemerActivity.SECTION_HOME)
+    override fun exec(pack: ExecutePack): String {
+        // The bare, familiar `settings` command belongs to Android. Re:TUI's
+        // editor remains available through `themer` and the in-app Settings UI.
+        pack.context.startActivity(Intent(Settings.ACTION_SETTINGS))
+        return Tuils.EMPTYSTRING
+    }
 
     override fun argType(): IntArray = intArrayOf()
 

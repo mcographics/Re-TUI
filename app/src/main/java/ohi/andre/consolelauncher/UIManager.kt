@@ -5762,12 +5762,34 @@ class UIManager(
             close.setTypeface(Tuils.getTypeface(mContext), Typeface.BOLD)
             close.setTextSize(moduleHeaderTextSize().toFloat())
         }
+        populateNotificationQuickApps(notificationWidget)
         styleNotificationWidget(notificationWidget)
         LocalBroadcastManager.getInstance(mContext!!.getApplicationContext()).sendBroadcast(
             Intent(
                 ACTION_REQUEST_NOTIFICATION_FEED
             )
         )
+    }
+
+    /** Seven local, one-tap app shortcuts kept directly below the notification feed. */
+    private fun populateNotificationQuickApps(widget: View) {
+        val row = widget.findViewById<LinearLayout>(R.id.notification_quick_apps_row) ?: return
+        row.removeAllViews()
+        val apps = mainPack.appsManager.suggestedApps ?: emptyArray()
+        apps.filterNotNull().take(7).forEach { info ->
+            val button = ImageButton(mContext)
+            button.layoutParams = LinearLayout.LayoutParams(
+                Tuils.dpToPx(mContext, 44f).toInt(), Tuils.dpToPx(mContext, 44f).toInt()
+            ).apply { marginEnd = Tuils.dpToPx(mContext, 6f).toInt() }
+            button.setPadding(Tuils.dpToPx(mContext, 8f).toInt(), Tuils.dpToPx(mContext, 8f).toInt(), Tuils.dpToPx(mContext, 8f).toInt(), Tuils.dpToPx(mContext, 8f).toInt())
+            button.background = null
+            button.contentDescription = info.publicLabel
+            try {
+                button.setImageDrawable(mContext.packageManager.getActivityInfo(info.componentName!!, 0).loadIcon(mContext.packageManager))
+            } catch (_: Exception) { return@forEach }
+            button.setOnClickListener { mainPack.appsManager.launch(mContext, info) }
+            row.addView(button)
+        }
     }
 
     private fun ensureNotificationServiceForModule() {

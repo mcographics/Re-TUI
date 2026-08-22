@@ -1614,13 +1614,25 @@ class AppsManager(context: Context) : XMLPrefsElement {
             appList: MutableList<out LaunchInfo>,
             label: String?
         ): LaunchInfo? {
-            var label = label ?: return null
-            label = Tuils.removeSpaces(label)
+            val query = label?.trim()?.lowercase(Locale.getDefault()) ?: return null
+            val normalized = Tuils.removeSpaces(query)
             for (i in appList) if (i.unspacedLowercaseLabel.equals(
-                    label,
+                    normalized,
                     ignoreCase = true
                 )
             ) return i
+
+            // Typing is intentionally forgiving: Android labels commonly
+            // contain punctuation, separators, or a trailing edition name.
+            val compactQuery = query.replace(Regex("[^\\p{L}\\p{N}]"), "")
+            if (compactQuery.isNotEmpty()) {
+                for (i in appList) {
+                    val compactLabel = (i.publicLabel ?: "")
+                        .lowercase(Locale.getDefault())
+                        .replace(Regex("[^\\p{L}\\p{N}]"), "")
+                    if (compactLabel == compactQuery || compactLabel.startsWith(compactQuery)) return i
+                }
+            }
             return null
         }
 

@@ -39,6 +39,21 @@
                     android:orientation="vertical" />
         </ScrollView>
 
+        <HorizontalScrollView
+            android:id="@+id/notification_quick_apps"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:scrollbars="none"
+            android:overScrollMode="never">
+            <LinearLayout
+                android:id="@+id/notification_quick_apps_row"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

@@ -171,6 +171,22 @@ class SuggestionRunnable(
                 sggView.setTag(R.id.suggestion_id, s)
 
                 sggView.setText(text)
+                if (s.type == SuggestionsManager.Suggestion.TYPE_APP && s.`object` is LaunchInfo) {
+                    try {
+                        val info = s.`object` as LaunchInfo
+                        val icon = pack.context.packageManager
+                            .getActivityInfo(info.componentName!!, 0)
+                            .loadIcon(pack.context.packageManager)
+                        val size = Tuils.dpToPx(pack.context, 20f).toInt()
+                        icon.setBounds(0, 0, size, size)
+                        sggView.setCompoundDrawables(icon, null, null, null)
+                        sggView.compoundDrawablePadding = Tuils.dpToPx(pack.context, 6f).toInt()
+                    } catch (_: Exception) {
+                        sggView.setCompoundDrawables(null, null, null, null)
+                    }
+                } else {
+                    sggView.setCompoundDrawables(null, null, null, null)
+                }
 
                 //                bg and fore
                 var bgColor = Int.Companion.MAX_VALUE
