@@ -184,6 +184,7 @@ class RetuiWallpaperActivity : AppCompatActivity() {
 
     private fun paletteSpinner(): Spinner = when (val current = preview) {
         is BlackHoleView -> spinner(BlackHoleView.PALETTE_NAMES, BlackHoleView.PALETTE_NAMES.indexOf(current.paletteName).coerceAtLeast(0), current::setPalette)
+        is RedMatrixView -> spinner(listOf("RED // MATRIX"), 0) { }
         is SolidColorView -> {
             val currentHex = hex(current.color)
             val themeColors = RetuiWallpaperSettings.themeColors()
