@@ -3979,7 +3979,7 @@ class SuggestionsManager(
                     SuggestionsManager.Suggestion(
                         beforeLastSpace,
                         l.publicLabel!!,
-                        canClickToLaunch && clickToLaunch,
+                        true,
                         Suggestion.Companion.TYPE_APP,
                         l
                     )
@@ -3992,7 +3992,7 @@ class SuggestionsManager(
                 suggestions,
                 beforeLastSpace,
                 canInsert,
-                canClickToLaunch && clickToLaunch,
+                true,
                 Suggestion.Companion.TYPE_APP,
                 canClickToLaunch && clickToLaunch
             )
@@ -4019,9 +4019,9 @@ class SuggestionsManager(
                     SuggestionsManager.Suggestion(
                         beforeLastSpace,
                         i.publicLabel!!,
-                        canClickToLaunch && clickToLaunch,
+                        true,
                         Suggestion.Companion.TYPE_APP,
-                        if (canClickToLaunch && clickToLaunch) i else null
+                        i
                     )
                 )
             }
