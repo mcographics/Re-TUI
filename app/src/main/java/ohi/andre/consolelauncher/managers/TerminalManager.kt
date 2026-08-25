@@ -286,7 +286,9 @@ class TerminalManager(
         prefixView.setTypeface(Tuils.getTypeface(context))
         prefixView.setTextColor(XMLPrefsManager.getColor(Theme.input_text_color))
         prefixView.setTextSize(ioSize.toFloat())
-        prefixView.setText(if (prefix.endsWith(Tuils.SPACE)) prefix else prefix + Tuils.SPACE)
+        // Keep the home prompt deliberately minimal; the current directory is
+        // already available through `pwd` and should not consume dashboard space.
+        prefixView.setText("> ")
         this.mPrefix = prefixView
 
         val toolbarColor = XMLPrefsManager.getColor(Theme.toolbar_icon_color)
@@ -586,14 +588,14 @@ class TerminalManager(
     fun onRoot() {
         (mContext as Activity).runOnUiThread(Runnable {
             suMode = true
-            mPrefix!!.setText(if (suPrefix.endsWith(Tuils.SPACE)) suPrefix else suPrefix + Tuils.SPACE)
+            mPrefix!!.setText("> ")
         })
     }
 
     fun onStandard() {
         (mContext as Activity).runOnUiThread(Runnable {
             suMode = false
-            mPrefix!!.setText(if (prefix.endsWith(Tuils.SPACE)) prefix else prefix + Tuils.SPACE)
+            mPrefix!!.setText("> ")
         })
     }
 
