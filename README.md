@@ -1,16 +1,16 @@
-# Re:TUI Console Launcher
+# Netrunner-Launcher
 
-Re:TUI is my continuation of the original T-UI Launcher: a terminal-style Android home screen that still expects you to type, experiment, and make the phone feel like your own.
+Netrunner-Launcher is Kenneth Salmon's customized fork of [DvilSpawn's Re:TUI](https://github.com/DvilSpawn/Re-TUI), a terminal-style Android home screen that still expects you to type, experiment, and make the phone feel like your own.
 
-The goal is not to turn T-UI into a conventional launcher with a terminal theme painted over it. I want to keep the command-first character that made the original special while making it practical on current Android versions. That means modern storage, safer integrations, touch-friendly panes where they genuinely help, and physical-device testing instead of assuming the emulator tells the whole story.
+The upstream lineage and credit remain explicit: DvilSpawn develops Re:TUI as a continuation of Francesco Andreuzzi's original [T-UI Console Launcher](https://github.com/fandreuz/TUI-ConsoleLauncher), with work from their respective contributors. Netrunner-Launcher does not claim authorship of that foundation. It preserves the upstream project history and license while applying Kenneth's own interface, dashboard, navigation, notification, weather, and day-to-day launcher customizations.
 
-> **Build 409 fork feature:** The `feature/red-terminal-dashboard-build406` branch adds a live red terminal dashboard, compact weather, real-time system monitoring, a wallpaper-only Home page, a 12-hour clock, launcher-scoped fullscreen handling, Android notification clearing, and a full-height top-aligned notification tray that stays anchored when the keyboard opens. See [Build 409 Red Terminal Dashboard](docs/BUILD_406_RED_TERMINAL_DASHBOARD.md) for the feature and verification record.
+> **Build 409 fork feature:** The `feature/red-terminal-dashboard-build406` branch adds a live red terminal dashboard, compact weather, real-time system monitoring, a wallpaper-only Home page, a 12-hour clock, launcher-scoped fullscreen handling, manual and automatic five-minute Android notification clearing, and a full-height top-aligned notification tray that stays anchored when the keyboard opens. See [Build 409 Red Terminal Dashboard](docs/BUILD_406_RED_TERMINAL_DASHBOARD.md) for the feature and verification record.
 
 ---
 
-## 🚀 What Re:TUI Includes
+## 🚀 What Netrunner-Launcher Includes
 
-Re:TUI supports Android 6.0 and newer and targets current Android APIs.
+Netrunner-Launcher retains Re:TUI's Android 6.0-and-newer support and current Android API target.
 
 > **First-install note:** If background transparency does not take effect immediately, type `restart` and press Enter.
 
@@ -83,9 +83,9 @@ This keeps the launcher lean for Play Store builds while preserving power-user L
 
 ---
 
-## 📦 Release Channels and Support
+## 📦 Upstream Release Channels and Support
 
-Re:TUI has a clear channel split:
+The following channels belong to the upstream Re:TUI project:
 
 *   **Play Store:** Official stable release for normal users and the primary way to support development.
 *   **Firebase App Distribution:** Official beta/testing channel for invited testers, preview builds, and rapid validation.
@@ -97,7 +97,7 @@ Support expectations follow that split:
 *   **Firebase builds:** Supported on a testing / best-effort basis.
 *   **Self-built or forked builds:** Community / best-effort only.
 
-The project stays public because Re:TUI benefits from open development, but the Play Store build is the canonical polished release for everyday use.
+Netrunner-Launcher is Kenneth's public customized source fork and locally tested Android build. Upstream Re:TUI's Play Store build remains DvilSpawn's canonical polished release; Netrunner-Launcher should not be mistaken for, or presented as, that official upstream release.
 
 ---
 
@@ -127,11 +127,12 @@ This project uses the **OWASP Mobile Application Security Verification Standard 
 
 ## 🔗 Useful Links
 
-**Project repo**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-->&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**[GitHub.com](https://github.com/DvilSpawn/Re-TUI.git)**<br>
-**Project wiki**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-->&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**[GitHub Wiki](https://github.com/DvilSpawn/Re-TUI/wiki)**<br>
-**Community**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-->&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**[Reddit](https://www.reddit.com/r/RE_TUI_launcher/)**<br>
-**Chat**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-->&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**[Discord](https://discord.gg/n6zsVYuV)**<br>
-**Email**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-->&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**[DvilSpawn@gmail.com](mailto:DvilSpawn@gmail.com)**<br>
+**Netrunner-Launcher fork**&nbsp;&nbsp;-->&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**[GitHub.com](https://github.com/mcographics/Netrunner-Launcher)**<br>
+**Upstream Re:TUI repo**&nbsp;&nbsp;&nbsp;&nbsp;-->&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**[GitHub.com](https://github.com/DvilSpawn/Re-TUI)**<br>
+**Upstream project wiki**&nbsp;&nbsp;-->&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**[GitHub Wiki](https://github.com/DvilSpawn/Re-TUI/wiki)**<br>
+**Upstream community**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-->&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**[Reddit](https://www.reddit.com/r/RE_TUI_launcher/)**<br>
+**Upstream chat**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-->&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**[Discord](https://discord.gg/n6zsVYuV)**<br>
+**Upstream contact**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-->&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**[DvilSpawn@gmail.com](mailto:DvilSpawn@gmail.com)**<br>
 
 ## 📚 Open Source Libraries
 * [**CompareString2**](https://github.com/fAndreuzzi/CompareString2)

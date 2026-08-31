@@ -1,10 +1,12 @@
-# Build 409 Red Terminal Dashboard
+# Netrunner-Launcher Build 409: Red Terminal Dashboard
 
-Build 409 extends the Re:TUI Build 400 line with a compact, functional Home
+This Netrunner-Launcher customization extends the upstream Re:TUI Build 400
+line with a compact, functional Home
 dashboard designed and verified on a Samsung Galaxy S20 FE (SM-G781W).
 
-This branch preserves the command-first Re:TUI foundation and upstream Git
-history. It does not replace Android System UI or modify the phone ROM.
+This branch preserves the command-first Re:TUI foundation, license,
+attribution, and upstream Git history. It adds Netrunner-Launcher-specific
+customizations without replacing Android System UI or modifying the phone ROM.
 
 ## Home surfaces
 
@@ -61,6 +63,10 @@ or a modified operating system.
   clearable Android notifications. Android retains ongoing or system-protected
   notifications, such as an active USB connection or persistent weather
   service notification.
+- While Android notification access is connected, Re:TUI automatically runs
+  that clearable-notification dismissal every five minutes. The schedule stops
+  when the notification listener disconnects and resumes with a fresh
+  five-minute interval when it reconnects.
 
 ## Weather behavior
 
@@ -86,7 +92,7 @@ archive does not publish the phone owner's personalized configuration.
 - Variant: `fdroidDebug`
 - Android version code: `409`
 - Android version name: `2-stable-ime-notifications`
-- Unit tests: 98 tests across 32 suites
+- Unit tests: 101 tests across 33 suites
 - Unit-test failures/errors: 0
 - APK assembly: successful
 - Physical-device install and launch: successful
@@ -97,9 +103,14 @@ archive does not publish the phone owner's personalized configuration.
   device
 - `clear` dismissed all clearable Android notifications; ongoing protected
   notifications remained as required by Android
+- Automatic notification clearing was verified on a physical device: a
+  temporary clearable notification remained before the first five-minute
+  boundary and was dismissed when that boundary elapsed
 
 ## Attribution
 
-This work remains licensed under the repository's MIT License and preserves the
-history and attribution of Re:TUI by DvilSpawn and the original T-UI Console
-Launcher by Francesco Andreuzzi and contributors.
+This work remains licensed under the repository's MIT License. Netrunner-Launcher
+is Kenneth Salmon's customization of Re:TUI by DvilSpawn, which continues the
+original T-UI Console Launcher by Francesco Andreuzzi and contributors. The
+fork preserves that history and attribution and does not claim authorship of
+the upstream foundation.

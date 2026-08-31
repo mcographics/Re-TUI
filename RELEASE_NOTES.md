@@ -1,4 +1,8 @@
-# Re:T-UI — Next Major Update
+# Netrunner-Launcher — Customized Re:TUI Build
+
+Netrunner-Launcher is Kenneth Salmon's customized fork of DvilSpawn's Re:TUI.
+Re:TUI continues Francesco Andreuzzi's original T-UI Console Launcher; their
+upstream work, contributors, history, and license remain credited and preserved.
 
 This is a major update focused on making Re:T-UI more reliable, easier to configure, and more useful without taking away its terminal-first character.
 

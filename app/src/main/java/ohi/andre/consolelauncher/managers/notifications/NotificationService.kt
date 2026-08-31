@@ -64,6 +64,11 @@ class NotificationService : NotificationListenerService() {
 
     var pastNotifications: HashMap<String?, MutableList<Notification>?>? = null
     private val serviceHandler: Handler = Handler()
+    private val notificationAutoClearScheduler = NotificationAutoClearScheduler(
+        postDelayed = { runnable, delay -> serviceHandler.postDelayed(runnable, delay) },
+        removeCallbacks = { runnable -> serviceHandler.removeCallbacks(runnable) },
+        clearNotifications = { dismissAllNotifications() }
+    )
 
     var format: String? = null
     var color: Int = 0
@@ -479,11 +484,13 @@ class NotificationService : NotificationListenerService() {
             reloadNotificationConfig()
         }
         setupMediaSession()
+        notificationAutoClearScheduler.start()
     }
 
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
         Log.d("TUI-Music", "NotificationListener disconnected")
+        notificationAutoClearScheduler.stop()
     }
 
     private fun setupMediaSession() {
@@ -814,6 +821,7 @@ class NotificationService : NotificationListenerService() {
 
     private fun dispose() {
         cancelExternalMusicClear()
+        notificationAutoClearScheduler.stop()
         serviceHandler.removeCallbacks(pastNotificationCleanupRunnable)
         if (controlReceiverRegistered) {
             try {
